@@ -148,13 +148,7 @@
         function getCurrentPlayerMoves (currentPlayer, moves) {
             const currentPlayerIndex = currentPlayer === 'x' ? 0 : 1;
 
-            return moves.reduce((memo, coordinates, i) => {
-               if (i % 2 === currentPlayerIndex) {
-                   return memo.concat([coordinates]);
-               }
-
-               return memo;
-            }, []);
+            return moves.filter((coordinates, i) => i % 2 === currentPlayerIndex);
         }
     </script>
 </body>
