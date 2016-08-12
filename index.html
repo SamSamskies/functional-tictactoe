@@ -22,26 +22,140 @@
             width: 200px;
             height: 200px;
             border: 2px solid black;
+            font-size: 200px;
+            text-align: center;
+            line-height: 160px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
     <div class="board">
-        <div class="row" data-row="x0">
-            <div class="cell" data-column="y0"></div>
-            <div class="cell" data-column="y1"></div>
-            <div class="cell" data-column="y2"></div>
+        <div class="row" data-row="0">
+            <div class="cell" data-column="0"></div>
+            <div class="cell" data-column="1"></div>
+            <div class="cell" data-column="2"></div>
         </div>
-        <div class="row" data-row="x1">
-            <div class="cell" data-column="y0"></div>
-            <div class="cell" data-column="y1"></div>
-            <div class="cell" data-column="y2"></div>
+        <div class="row" data-row="1">
+            <div class="cell" data-column="0"></div>
+            <div class="cell" data-column="1"></div>
+            <div class="cell" data-column="2"></div>
         </div>
-        <div class="row" data-row="x2">
-            <div class="cell" data-column="y0"></div>
-            <div class="cell" data-column="y1"></div>
-            <div class="cell" data-column="y2"></div>
+        <div class="row" data-row="2">
+            <div class="cell" data-column="0"></div>
+            <div class="cell" data-column="1"></div>
+            <div class="cell" data-column="2"></div>
         </div>
     </div>
+    <script>
+        startGame();
+
+        /**
+         * Effects (imperative)
+         */
+        function startGame () {
+            const moves = [];
+            const boardNode = document.querySelector('.board');
+
+            boardNode.addEventListener('click', (e) => {
+
+                // Ignore click if cell is already played.
+                if (checkIfCellIsAlreadyPlayed(e.target)) {
+                    return;
+                }
+
+                const coordinates = convertCellToCoordinates(e.target);
+
+                moves.push(coordinates);
+
+                const { currentPlayer, winner } = playRound(moves);
+
+                updateCellContents(e.target, currentPlayer);
+
+
+                if (winner !== '') {
+                    // Give DOM time to update before showing
+                    setTimeout(() => {
+                        alert(`winner is ${winner}`);
+                        window.location.reload();
+                    }, 100);
+                }
+            });
+        }
+
+        function checkIfCellIsAlreadyPlayed (cellNode) {
+            return cellNode.innerText !== '';
+        }
+
+        function convertCellToCoordinates (cellNode) {
+            const x = parseInt(cellNode.closest('.row').getAttribute('data-row'));
+            const y = parseInt(cellNode.getAttribute('data-column'));
+
+            return [x, y];
+        }
+
+        function updateCellContents (cellNode, currentPlayer) {
+            cellNode.innerHTML = currentPlayer;
+        }
+
+        /**
+         * Logic (functional)
+         */
+        function playRound (moves) {
+            return {
+                currentPlayer: getCurrentPlayer(moves),
+                winner: getWinner(moves),
+            }
+        }
+
+        function getCurrentPlayer (moves) {
+            return moves.length % 2 === 0 ? 'o' : 'x';
+        }
+
+        function getWinner (moves) {
+            const currentPlayer = getCurrentPlayer(moves);
+            const currentPlayerMoves = getCurrentPlayerMoves(currentPlayer, moves);
+            const isWinner = checkIfCurrentPlayerWon(currentPlayerMoves);
+
+            if (isWinner) {
+                return currentPlayer;
+            } else if (moves.length === 9) {
+                return 'draw';
+            }
+
+            return '';
+        }
+
+        function checkIfCurrentPlayerWon (currentPlayerMoves) {
+            const allWinningCoordinates = [
+              [[0,0], [0, 1], [0, 2]],
+              [[1,0], [1, 1], [1, 2]],
+              [[2,0], [2, 1], [2, 2]],
+              [[0,0], [1, 0], [2, 0]],
+              [[0,1], [1, 1], [2, 1]],
+              [[0,2], [1, 2], [2, 2]],
+              [[0,0], [1, 1], [2, 2]],
+              [[2,0], [1, 1], [0, 2]],
+            ];
+
+            return allWinningCoordinates.some((winningCoordinates) => {
+               return winningCoordinates.every(([winningX, winningY]) => {
+                   return currentPlayerMoves.find(([x, y]) => winningX === x && winningY === y);
+               });
+            });
+        }
+
+        function getCurrentPlayerMoves (currentPlayer, moves) {
+            const currentPlayerIndex = currentPlayer === 'x' ? 0 : 1;
+
+            return moves.reduce((memo, coordinates, i) => {
+               if (i % 2 === currentPlayerIndex) {
+                   return memo.concat([coordinates]);
+               }
+
+               return memo;
+            }, []);
+        }
+    </script>
 </body>
 </html>
