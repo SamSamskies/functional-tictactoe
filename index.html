@@ -97,15 +97,25 @@
          * Logic (functional)
          */
         const playRound = (function () {
-            const moves = [];
+            let moves = [];
 
-            return function (move) {
+            return function (move, options = {}) {
+                if (options.reset) {
+                    moves = [];
+                }
+
                 moves.push(move);
 
+                const currentPlayer = getCurrentPlayer(moves);
+                const currentPlayerIndex = getCurrentPlayerIndex(currentPlayer);
+                const currentPlayerMoves = getCurrentPlayerMoves(moves, currentPlayerIndex);
+                const currentPlayerIsWinner = checkIfCurrentPlayerWon(currentPlayerMoves);
+                const turnNumber = moves.length;
+
                 return {
-                    currentPlayer: getCurrentPlayer(moves),
-                    winner: getWinner(moves),
-                }
+                    currentPlayer,
+                    winner: getWinner(currentPlayer, currentPlayerIsWinner, turnNumber)
+                };
             }
         })();
 
@@ -113,14 +123,12 @@
             return moves.length % 2 === 0 ? 'o' : 'x';
         }
 
-        function getWinner (moves) {
-            const currentPlayer = getCurrentPlayer(moves);
-            const currentPlayerMoves = getCurrentPlayerMoves(currentPlayer, moves);
-            const isWinner = checkIfCurrentPlayerWon(currentPlayerMoves);
-
-            if (isWinner) {
+        function getWinner (currentPlayer, currentPlayerisWinner, turnNumber) {
+            if (currentPlayerisWinner) {
                 return currentPlayer;
-            } else if (moves.length === 9) {
+            }
+
+            if (turnNumber === 9) {
                 return 'draw';
             }
 
@@ -146,9 +154,11 @@
             });
         }
 
-        function getCurrentPlayerMoves (currentPlayer, moves) {
-            const currentPlayerIndex = currentPlayer === 'x' ? 0 : 1;
+        function getCurrentPlayerIndex (currentPlayer) {
+            return currentPlayer === 'x' ? 0 : 1;
+        }
 
+        function getCurrentPlayerMoves (moves, currentPlayerIndex) {
             return moves.filter((coordinates, i) => i % 2 === currentPlayerIndex);
         }
     </script>
