@@ -54,14 +54,18 @@
          * Effects (imperative)
          */
         function startGame () {
+            let moves = [];
+
             document.querySelector('.board').addEventListener('click', (e) => {
                 const move = convertCellToCoordinates(e.target);
 
-                try {
-                    var { currentPlayer, winner } = playRound(move);
-                } catch (e) {
-                    return; // silently fail if illegal move is made
+                if (checkIfMoveWasAlreadyMade(moves, move)) {
+                    return;
                 }
+
+                moves.push(move);
+
+                const { currentPlayer, winner } = playRound(moves);
 
                 updateCellContents(e.target, currentPlayer);
 
@@ -75,6 +79,10 @@
                     window.location.reload();
                 }, 100);
             });
+        }
+
+        function checkIfMoveWasAlreadyMade (moves, [moveX, moveY]) {
+            return moves.find(([x, y]) => moveX === x && moveY === y);
         }
 
         function convertCellToCoordinates (cellNode) {
@@ -91,35 +99,17 @@
         /**
          * Logic (functional)
          */
-        const playRound = (function () {
-            let moves = [];
+        function playRound (moves) {
+            const currentPlayer = getCurrentPlayer(moves);
+            const currentPlayerIndex = getCurrentPlayerIndex(currentPlayer);
+            const currentPlayerMoves = getCurrentPlayerMoves(moves, currentPlayerIndex);
+            const currentPlayerIsWinner = checkIfCurrentPlayerWon(currentPlayerMoves);
+            const turnNumber = moves.length;
 
-            return function (move, options = {}) {
-                if (options.reset) {
-                    moves = [];
-                }
-
-                if (checkIfMoveWasAlreadyMade(moves, move)) {
-                    throw new Error('Illegal move.');
-                }
-
-                moves.push(move);
-
-                const currentPlayer = getCurrentPlayer(moves);
-                const currentPlayerIndex = getCurrentPlayerIndex(currentPlayer);
-                const currentPlayerMoves = getCurrentPlayerMoves(moves, currentPlayerIndex);
-                const currentPlayerIsWinner = checkIfCurrentPlayerWon(currentPlayerMoves);
-                const turnNumber = moves.length;
-
-                return {
-                    currentPlayer,
-                    winner: getWinner(currentPlayer, currentPlayerIsWinner, turnNumber)
-                };
-            }
-        })();
-
-        function checkIfMoveWasAlreadyMade (moves, [moveX, moveY]) {
-            return moves.find(([x, y]) => moveX === x && moveY === y);
+            return {
+                currentPlayer,
+                winner: getWinner(currentPlayer, currentPlayerIsWinner, turnNumber)
+            };
         }
 
         function getCurrentPlayer (moves) {
