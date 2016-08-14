@@ -55,14 +55,13 @@
          */
         function startGame () {
             document.querySelector('.board').addEventListener('click', (e) => {
-
-                // Ignore click if cell is already played.
-                if (checkIfCellIsAlreadyPlayed(e.target)) {
-                    return;
-                }
-
                 const move = convertCellToCoordinates(e.target);
-                const { currentPlayer, winner } = playRound(move);
+
+                try {
+                    var { currentPlayer, winner } = playRound(move);
+                } catch (e) {
+                    return; // silently fail if illegal move is made
+                }
 
                 updateCellContents(e.target, currentPlayer);
 
@@ -76,10 +75,6 @@
                     window.location.reload();
                 }, 100);
             });
-        }
-
-        function checkIfCellIsAlreadyPlayed (cellNode) {
-            return cellNode.innerText !== '';
         }
 
         function convertCellToCoordinates (cellNode) {
@@ -104,6 +99,10 @@
                     moves = [];
                 }
 
+                if (checkIfMoveWasAlreadyMade(moves, move)) {
+                    throw new Error('Illegal move.');
+                }
+
                 moves.push(move);
 
                 const currentPlayer = getCurrentPlayer(moves);
@@ -118,6 +117,10 @@
                 };
             }
         })();
+
+        function checkIfMoveWasAlreadyMade (moves, [moveX, moveY]) {
+            return moves.find(([x, y]) => moveX === x && moveY === y);
+        }
 
         function getCurrentPlayer (moves) {
             return moves.length % 2 === 0 ? 'o' : 'x';
